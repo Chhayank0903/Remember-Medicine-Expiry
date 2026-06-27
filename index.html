@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediGuard - Medicine Expiry Reminder & Agent</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon">
+          <i data-lucide="shield-alert"></i>
+        </div>
+        <div class="logo-text">
+          <h1>MediGuard</h1>
+          <span class="sub-text" data-i18n="tagline">ASHA & Community Health Assistant</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="date-badge">
+          <i data-lucide="calendar"></i>
+          <span id="current-date-display">Today: 27 June 2026</span>
+        </div>
+        <button id="lang-toggle" class="btn btn-secondary lang-btn">
+          <i data-lucide="languages"></i>
+          <span id="lang-text">हिंदी में</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="app-main">
+      <!-- Left / Top Column: Dashboard -->
+      <section class="dashboard-area">
+        <!-- Stats Summary Section -->
+        <div class="stats-grid">
+          <div class="stat-card total" onclick="setFilterStatus('all')">
+            <div class="stat-icon"><i data-lucide="package"></i></div>
+            <div class="stat-info">
+              <span class="stat-label" data-i18n="total_tracked">Total Tracked</span>
+              <h3 id="stat-total">0</h3>
+            </div>
+          </div>
+          <div class="stat-card expired" onclick="setFilterStatus('expired')">
+            <div class="stat-icon"><i data-lucide="alert-octagon"></i></div>
+            <div class="stat-info">
+              <span class="stat-label" data-i18n="expired_count">Expired</span>
+              <h3 id="stat-expired">0</h3>
+            </div>
+            <span class="badge badge-red">🔴 Action</span>
+          </div>
+          <div class="stat-card expiring" onclick="setFilterStatus('expiring')">
+            <div class="stat-icon"><i data-lucide="clock"></i></div>
+            <div class="stat-info">
+              <span class="stat-label" data-i18n="expiring_soon">Expiring Soon</span>
+              <h3 id="stat-expiring">0</h3>
+            </div>
+            <span class="badge badge-yellow">🟡 30 Days</span>
+          </div>
+          <div class="stat-card safe" onclick="setFilterStatus('safe')">
+            <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+            <div class="stat-info">
+              <span class="stat-label" data-i18n="safe_count">Safe Stock</span>
+              <h3 id="stat-safe">0</h3>
+            </div>
+            <span class="badge badge-green">🟢 Safe</span>
+          </div>
+        </div>
+
+        <!-- Notification Banner Panel -->
+        <div id="urgent-alerts-panel" class="alerts-container">
+          <div class="section-title-row">
+            <h2 class="section-title text-red">
+              <i data-lucide="bell-ring" class="animate-bell"></i> 
+              <span data-i18n="urgent_alerts">Urgent Expiry Alerts</span>
+            </h2>
+            <span id="alerts-count-badge" class="alert-count-pill">0 Alerts</span>
+          </div>
+          <div id="alerts-list" class="alerts-list">
+            <!-- Dynamically populated warnings -->
+          </div>
+        </div>
+
+        <!-- Inventory controls -->
+        <div class="inventory-controls">
+          <div class="search-bar">
+            <i data-lucide="search"></i>
+            <input type="text" id="search-input" placeholder="Search medicine, brand, batch..." data-i18n-placeholder="search_placeholder">
+          </div>
+          <div class="filters-row">
+            <div class="filter-group">
+              <label for="filter-status" data-i18n="filter_status">Status</label>
+              <select id="filter-status">
+                <option value="all" data-i18n="all">All Statuses</option>
+                <option value="expired" data-i18n="expired_only">🔴 Expired</option>
+                <option value="expiring" data-i18n="expiring_only">🟡 Expiring Soon</option>
+                <option value="safe" data-i18n="safe_only">🟢 Safe</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-location" data-i18n="filter_location">Location</label>
+              <select id="filter-location">
+                <option value="all" data-i18n="all_locations">All Locations</option>
+                <option value="Health Centre" data-i18n="loc_health_centre">Health Centre</option>
+                <option value="Home" data-i18n="loc_home">Home / Elder Care</option>
+                <option value="Kirana Store" data-i18n="loc_kirana">Kirana Store</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-category" data-i18n="filter_category">Category</label>
+              <select id="filter-category">
+                <option value="all" data-i18n="all_categories">All Categories</option>
+                <option value="Antibiotic" data-i18n="cat_antibiotic">Antibiotic</option>
+                <option value="Vaccine" data-i18n="cat_vaccine">Vaccine</option>
+                <option value="Syrup" data-i18n="cat_syrup">Syrup</option>
+                <option value="Painkiller" data-i18n="cat_painkiller">Painkiller</option>
+                <option value="Other" data-i18n="cat_other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="action-buttons-row">
+            <button id="btn-open-add" class="btn btn-primary btn-large">
+              <i data-lucide="plus-circle"></i>
+              <span data-i18n="add_new_medicine">Add New Medicine</span>
+            </button>
+            <button id="btn-export-csv" class="btn btn-outline btn-large">
+              <i data-lucide="download"></i>
+              <span data-i18n="download_report">Download CSV Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Medicine Card Grid -->
+        <div class="stock-container">
+          <div class="section-title-row">
+            <h2 class="section-title">
+              <i data-lucide="clipboard-list"></i>
+              <span data-i18n="tracked_medicines">Tracked Stock</span>
+            </h2>
+            <span id="showing-count" class="results-pill">Showing 0 medicines</span>
+          </div>
+          <div id="medicine-grid" class="medicine-grid">
+            <!-- Loaded dynamically from localStorage/seed data -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right / Bottom Column: Chat Agent Panel -->
+      <section class="agent-chat-area">
+        <div class="chat-header">
+          <div class="agent-avatar">
+            <div class="avatar-circle">
+              <i data-lucide="bot"></i>
+              <span class="online-indicator"></span>
+            </div>
+            <div class="agent-details">
+              <h3>Medi-Didi</h3>
+              <span data-i18n="agent_helper">Your Expiry Assistant</span>
+            </div>
+          </div>
+          <button id="btn-clear-chat" class="btn-icon-only" title="Clear Chat">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+        
+        <!-- Conversation Feed -->
+        <div id="chat-messages" class="chat-messages">
+          <!-- Initial greeting is dynamically output here -->
+        </div>
+
+        <!-- Suggestion Chips / Quick Queries -->
+        <div class="suggestion-chips-container">
+          <div class="chips-scroll">
+            <button class="chip" onclick="askAgent('Which medicines are expiring this week?')">
+              📅 <span data-i18n="chip_expiring_week">Expiring this week?</span>
+            </button>
+            <button class="chip" onclick="askAgent('How many medicines are expired at the Health Centre?')">
+              🏥 <span data-i18n="chip_expired_health">Expired at Health Centre?</span>
+            </button>
+            <button class="chip" onclick="askAgent('What should I do with expired Amoxicillin?')">
+              💊 <span data-i18n="chip_expired_amox">What to do with expired Amoxicillin?</span>
+            </button>
+            <button class="chip" onclick="showVoiceHint()">
+              🎙️ <span data-i18n="chip_how_to_add">How to add via chat?</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-container">
+          <input type="text" id="chat-input" placeholder="Type a message or add medicine..." data-i18n-placeholder="chat_input_placeholder">
+          <button id="btn-chat-send" class="btn btn-primary btn-round">
+            <i data-lucide="send"></i>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Dialog: Intake Form -->
+    <div id="intake-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modal-title" data-i18n="modal_add_title">Register Medicine</h2>
+          <button id="btn-close-modal" class="btn-icon-only"><i data-lucide="x"></i></button>
+        </div>
+        <form id="intake-form" class="modal-form" onsubmit="handleFormSubmit(event)">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="med-name" class="required"><span data-i18n="lbl_med_name">Medicine Name</span> *</label>
+              <input type="text" id="med-name" required placeholder="e.g., Paracetamol" data-i18n-placeholder="med_name_placeholder">
+            </div>
+            <div class="form-group flex-1">
+              <label for="med-category"><span data-i18n="lbl_category">Category</span></label>
+              <select id="med-category">
+                <option value="Painkiller" data-i18n="cat_painkiller">Painkiller</option>
+                <option value="Antibiotic" data-i18n="cat_antibiotic">Antibiotic</option>
+                <option value="Vaccine" data-i18n="cat_vaccine">Vaccine</option>
+                <option value="Syrup" data-i18n="cat_syrup">Syrup</option>
+                <option value="Other" data-i18n="cat_other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="med-brand"><span data-i18n="lbl_brand">Brand / Manufacturer</span></label>
+              <input type="text" id="med-brand" placeholder="e.g., Cipla">
+            </div>
+            <div class="form-group">
+              <label for="med-batch" class="required"><span data-i18n="lbl_batch">Batch Number</span> *</label>
+              <input type="text" id="med-batch" required placeholder="e.g., B-239">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="med-expiry" class="required"><span data-i18n="lbl_expiry">Expiry Date</span> *</label>
+              <input type="date" id="med-expiry" required>
+              <span class="field-hint" data-i18n="lbl_expiry_hint">Date when this medicine expires</span>
+            </div>
+            <div class="form-group">
+              <label for="med-qty" class="required"><span data-i18n="lbl_qty">Quantity (Pills/Bottles)</span> *</label>
+              <input type="number" id="med-qty" required min="1" placeholder="e.g., 50">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="med-location" class="required"><span data-i18n="lbl_location">Storage Location</span> *</label>
+              <select id="med-location">
+                <option value="Health Centre" data-i18n="loc_health_centre">Health Centre</option>
+                <option value="Home" data-i18n="loc_home">Home / Elder Care</option>
+                <option value="Kirana Store" data-i18n="loc_kirana">Kirana Store</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="med-owner" class="required"><span data-i18n="lbl_owner">Owner / Contact Name</span> *</label>
+              <input type="text" id="med-owner" required placeholder="e.g., ASHA Worker Sunita" data-i18n-placeholder="owner_placeholder">
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="btn-cancel-modal" class="btn btn-outline" data-i18n="btn_cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save Medicine</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Alert / Toast Banner -->
+    <div id="toast" class="toast">
+      <div class="toast-content">
+        <i data-lucide="check-circle" id="toast-icon"></i>
+        <span id="toast-message">Action successful!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript logic -->
+  <script src="app.js"></script>
+</body>
+</html>
